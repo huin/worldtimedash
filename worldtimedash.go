@@ -52,7 +52,11 @@ func main() {
 
 	resize := func() {
 		if *tmuxFlag {
-			tmuxCmd := exec.Command("tmux", "resize", "-y", strconv.Itoa(len(tzs)))
+			tmuxCmd := exec.Command(
+				"tmux", "resize",
+				"-t", os.Getenv("TMUX_PANE"),
+				"-y", strconv.Itoa(len(tzs)),
+			)
 			tmuxCmd.Stdin = nil
 			tmuxCmd.Stdout = nil
 			tmuxCmd.Stderr = nil
