@@ -15,7 +15,7 @@ import (
 
 var (
 	tzFlag      = flag.String("tzlist", "", "Timezones to display")
-	timeFmtFlag = flag.String("timeFmt", "2006/01/02T03:04-0700 (MST)", "Time format")
+	timeFmtFlag = flag.String("timeFmt", "2006/01/02T15:04-0700 (MST)", "Time format")
 	tmuxFlag    = flag.Bool("tmux", false, "Embedded in tmux, resize dashboard to height")
 )
 
