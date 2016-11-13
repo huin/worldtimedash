@@ -8,14 +8,15 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	ui "github.com/gizak/termui"
 	termbox "github.com/nsf/termbox-go"
 )
 
 var (
-	tzFlag      = flag.String("tzlist", "", "Timezones to display")
-	timeFmtFlag = flag.String("timeFmt", "2006/01/02T15:04-0700 (MST)", "Time format")
+	tzFlag      = flag.String("tzlist", "", "Timezones to display, delimited by commas")
+	timeFmtFlag = flag.String("timeFmt", "2006/01/02T03:04-0700 (MST)", "Time format")
 	tmuxFlag    = flag.Bool("tmux", false, "Embedded in tmux, resize dashboard to height")
 )
 
@@ -44,8 +45,10 @@ func main() {
 
 	timesWidget := ui.NewList()
 	timesWidget.Items = make([]string, len(tzs))
-	timesWidget.HasBorder = false
-	timesWidget.Width = 30
+	timesWidget.Border = false
+	// RuneCountInString is technically incorrect because it doesn't account for
+	// combining characters, but it should be fine most of the time.
+	timesWidget.Width = utf8.RuneCountInString(*timeFmtFlag) + 1
 	timesWidget.Height = len(tzs)
 	timesWidget.X = 0
 	timesWidget.Y = 0
@@ -81,22 +84,13 @@ func main() {
 	}
 	draw()
 
-	evt := ui.EventCh()
-	ticker := time.Tick(1 * time.Second)
-	for {
-		select {
-		case e := <-evt:
-			switch e.Type {
-			case ui.EventKey:
-				switch e.Ch {
-				case 'q':
-					return
-				}
-			case ui.EventResize:
-				resize()
-			}
-		case _ = <-ticker:
-			draw()
-		}
-	}
+	ui.Merge("timer", ui.NewTimerCh(1*time.Second))
+	ui.Handle("/timer", func(ui.Event) { draw() })
+	ui.Handle("/sys/wnd/resize", func(ui.Event) {
+		resize()
+	})
+	ui.Handle("/sys/kbd/q", func(ui.Event) {
+		ui.StopLoop()
+	})
+	ui.Loop()
 }
